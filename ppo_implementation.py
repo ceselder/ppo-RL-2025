@@ -6,8 +6,12 @@ from torch.distributions import Categorical
 from torch.distributions import MultivariateNormal
 import numpy as np
 from nn_utils import GenericNeuralNetwork
-
+import pandas as pd, matplotlib.pyplot as plt
 import pickle
+
+#hyperparameters I declared to make stuff go faster locally
+big_layer = 512 # default = 4096
+smaller_layer = 256 #default = 2048
 
 with open('public_data_dict.pkl', 'rb') as f:
     data = pickle.load(f)
@@ -165,15 +169,15 @@ state_dim = 5       # Dimension of each state, do not change
 action_dim = 1      # Dimension of the actions, do not change
 
 actor_nn_params = dict(input_size=state_dim,
-                       layers=[(4096, 'relu', 0.9), # (number_of_neurons, activation_function, dropout_rate)
-                               (2048, 'relu', 0.9), ],
+                       layers=[(big_layer, 'relu', 0.9), # (number_of_neurons, activation_function, dropout_rate)
+                               (smaller_layer, 'relu', 0.9), ],
                        output_size=action_dim,
                        activation_final='tanh')
 actor = GenericNeuralNetwork(params=actor_nn_params)
 
 critic_nn_params = dict(input_size=state_dim,
-                        layers=[(2048, 'relu', 0.9),
-                                (4096, 'relu', 0.9), ],
+                        layers=[(big_layer, 'relu', 0.9),
+                                (smaller_layer, 'relu', 0.9), ],
                         output_size=1,
                         activation_final='linear')
 critic = GenericNeuralNetwork(params=critic_nn_params)
@@ -224,3 +228,35 @@ for training_iteration in range(1, num_iteration+1):
     if (training_iteration % iteration_per_evaluation) == 0:
         reward = evaluate_agent()
         print(training_iteration, reward)
+
+summary = pd.read_csv("ppo_results.csv")
+curves  = pd.read_csv("ppo_results_per_iteration.csv")
+
+assert len(curves) % len(summary) == 0, "Curves length not multiple of runs!"
+
+steps_per_run = len(curves) // len(summary)
+
+for i, row in summary.reset_index(drop=True).iterrows():
+    gamma        = row["gamma"]
+    sampling_var = row["sampling_var"]
+    clip         = row["clip"]
+    actor_lr     = row["actor_lr"]
+    critic_lr    = row["critic_lr"]
+    updates      = row["updates"]
+
+    start = i * steps_per_run
+    end   = start + steps_per_run
+    run_curve = curves.iloc[start:end]
+
+    print(f"\nRun {i+1}/{len(summary)}")
+    print(f"  γ = {gamma} | σ = {sampling_var} | clip = {clip} | "
+          f"actor lr = {actor_lr} | critic lr = {critic_lr} | updates = {updates}")
+
+    plt.figure(figsize=(6,4))
+    plt.plot(run_curve["training_iteration"], run_curve["reward"], marker="o")
+    plt.title(f"Reward evolution — γ={gamma}, σ={sampling_var}, clip={clip}, upd={updates}")
+    plt.xlabel("Training iteration")
+    plt.ylabel("Mean evaluation reward")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
