@@ -44,7 +44,7 @@ class Battery():
 
 class BaseEnvironment():
     def __init__(self, SoC: float=0.5, power_capacity: float=1, energy_capacity: float=1, efficiency: float=1, data: dict = None):
-        self.num_minutes_per_step = 60    # Hyperparameter!
+        self.num_minutes_per_step = 5    # Hyperparameter!
         self.initial_SoC = SoC
         self.data = data
 
