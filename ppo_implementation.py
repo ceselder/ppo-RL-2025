@@ -14,6 +14,10 @@ import matplotlib.pyplot as plt
 
 import pickle
 
+random.seed(42)
+np.random.seed(42)
+torch.manual_seed(42)
+
 with open('public_data_dict.pkl', 'rb') as f:
     data = pickle.load(f)
 
@@ -234,8 +238,8 @@ for i, combo in enumerate(combos):
         critic_lr_start=c_lr,
         critic_lr_end=c_lr,
         cutoff=80,
-        use_entropy=False,
-        beta_entropy=0.1
+        entropy=False,
+        beta_entropy=0.01
     )
 
     actor = GenericNeuralNetwork(params=actor_nn_params)
