@@ -81,7 +81,8 @@ class BaseEnvironment():
                       self.prices[min(self.t, len(self.prices) - 1)],
                       self.pv_profile[min(self.t, len(self.pv_profile) - 1)],
                       self.household_consumption[min(self.t, len(self.household_consumption) - 1)]]
-        # self.state = self.scale_state(self.state)
+        self.state = self.scale_state(self.state)
+        self.reward = self.scale_reward(reward)
 
         if self.t >= 24:
             self.done = True

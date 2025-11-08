@@ -102,7 +102,6 @@ class PPOAgent:
         dist = MultivariateNormal(action_means, self.cov_mat)
         entropy = dist.entropy()
         log_probs = dist.log_prob(batch_actions)
-        V = torch.clamp(V, -1, 1)
         return V, log_probs, entropy
 
     def sample_action(self, state, explore=False):
@@ -128,7 +127,7 @@ class PPOAgent:
             batch_cumulative_rewards.extend(returns)
 
         batch_cumulative_rewards = torch.tensor(batch_cumulative_rewards, dtype=torch.float)
-        return torch.clamp(batch_cumulative_rewards,-1,1)
+        return batch_cumulative_rewards
 
     def rollout(self):
         # NOTE: Put the correct sizes as comment here
@@ -238,7 +237,7 @@ for i, combo in enumerate(combos):
         critic_lr_start=c_lr,
         critic_lr_end=c_lr,
         cutoff=80,
-        entropy=False,
+        use_entropy=False,
         beta_entropy=0.01
     )
 
